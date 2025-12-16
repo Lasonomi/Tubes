@@ -112,46 +112,45 @@ class CartController extends Controller
     /**
      * Proses checkout & simpan order
      */
-    public function checkout()
-    {
-        $cart = session('cart', []);
+public function checkout()
+{
+    $cart = session('cart', []);
 
-        if (empty($cart)) {
-            return back()->with('error', 'Keranjang belanja kosong!');
-        }
+    if (empty($cart)) {
+        return back()->with('error', 'Keranjang belanja kosong!');
+    }
 
-        // Hitung total harga
-        $total = 0;
-        foreach ($cart as $item) {
-            $total += $item['price'] * $item['quantity'];
-        }
+    $total = 0;
+    foreach ($cart as $item) {
+        $total += $item['price'] * $item['quantity'];
+    }
 
-        // Buat order baru
-        $order = Order::create([
-            'user_id' => Auth::id(),
-            'total'   => $total,
-            'status'  => 'pending', // bisa diubah jadi 'paid' kalau pakai payment gateway
+    // Buat order langsung dengan status 'paid' atau 'processing'
+    $order = Order::create([
+        'user_id' => Auth::id(),
+        'total'   => $total,
+        'status'  => 'paid', // langsung paid, siap packing
+    ]);
+
+    // Simpan item order + update stok & sold
+    foreach ($cart as $productId => $item) {
+        OrderItem::create([
+            'order_id'   => $order->id,
+            'product_id' => $productId,
+            'quantity'   => $item['quantity'],
+            'price'      => $item['price'],
         ]);
 
-        // Simpan detail item order + update stok & sold
-        foreach ($cart as $productId => $item) {
-            OrderItem::create([
-                'order_id'    => $order->id,
-                'product_id'  => $productId,
-                'quantity'    => $item['quantity'],
-                'price'       => $item['price'],
-            ]);
-
-            // Update stok dan sold produk
-            $product = Product::find($productId);
-            $product->decrement('stock', $item['quantity']);
-            $product->increment('sold', $item['quantity']);
-        }
-
-        // Kosongkan keranjang
-        session()->forget('cart');
-
-        return redirect()->route('orders.history')
-                         ->with('success', 'Pembelian berhasil! Pesanan kamu telah tercatat.');
+        $product = Product::find($productId);
+        $product->decrement('stock', $item['quantity']);
+        $product->increment('sold', $item['quantity']);
     }
+
+    // Kosongkan keranjang
+    session()->forget('cart');
+
+    // Redirect ke halaman nota/invoice sederhana
+    return redirect()->route('orders.invoice', $order->id)
+                     ->with('success', 'Pembelian berhasil! Pesanan kamu siap diproses.');
+}
 }

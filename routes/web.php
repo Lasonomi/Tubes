@@ -5,12 +5,14 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Models\Order;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 // Halaman utama (sebelum login)
+// Halaman utama langsung ke login
 Route::get('/', function () {
-    return view('welcome');
+    return view('auth.login');
 })->name('home');
 
 // Redirect setelah login berdasarkan role
@@ -36,6 +38,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
     Route::delete('/cart/remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+    // Halaman Nota/Invoice setelah checkout
+        Route::get('/orders/invoice/{order}', function (\App\Models\Order $order) {
+            // Pastikan order milik user yang login (keamanan)
+            if ($order->user_id !== Auth::id()) {
+                abort(403, 'Unauthorized');
+            }
+
+            return view('shop.orders.invoice', compact('order'));
+        })->name('orders.invoice');
 
     // Riwayat Pesanan User
     Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
@@ -55,7 +66,7 @@ Route::middleware(['auth', 'admin'])
         // Dashboard Admin
         Route::get('/dashboard', function () {
             $totalProducts   = \App\Models\Product::count();
-            $newOrders       = \App\Models\Order::where('status', 'pending')->count();
+            $newOrders       = Order::where('status', 'pending')->count();
             $notifications   = $newOrders + \App\Models\Product::where('stock', '<', 10)->count();
             $topProducts     = \App\Models\Product::orderByDesc('sold')->take(5)->get();
             $lowStock        = \App\Models\Product::where('stock', '<', 10)->orderBy('stock')->take(5)->get();
@@ -81,10 +92,10 @@ Route::middleware(['auth', 'admin'])
             ])->having('low_count', '>', 0)->get();
 
             $orderStats = [
-                'pending'   => \App\Models\Order::where('status', 'pending')->count(),
-                'paid'      => \App\Models\Order::where('status', 'paid')->count(),
-                'shipped'   => \App\Models\Order::where('status', 'shipped')->count(),
-                'completed' => \App\Models\Order::where('status', 'completed')->count(),
+                'pending'   => Order::where('status', 'pending')->count(),
+                'paid'      => Order::where('status', 'paid')->count(),
+                'shipped'   => Order::where('status', 'shipped')->count(),
+                'completed' => Order::where('status', 'completed')->count(),
             ];
 
             return view('admin.charts', compact('topProducts', 'lowStockCategories', 'orderStats'));
@@ -92,7 +103,7 @@ Route::middleware(['auth', 'admin'])
 
         // Halaman Notifikasi
         Route::get('/notifications', function () {
-            $newOrders = \App\Models\Order::where('status', 'pending')->latest()->get();
+            $newOrders = Order::where('status', 'pending')->latest()->get();
 
             $lowStockProducts = \App\Models\Product::where('stock', '<', 10)
                 ->orderBy('stock')
@@ -102,7 +113,24 @@ Route::middleware(['auth', 'admin'])
 
             return view('admin.notifications', compact('newOrders', 'lowStockProducts', 'totalNotifications'));
         })->name('notifications');
+
+        // Aksi Konfirmasi & Batalkan Pesanan dari Notifikasi
+        Route::patch('/orders/{order}/confirm', function (Order $order) {
+            $order->update(['status' => 'paid']);
+            return back()->with('success', 'Pesanan #' . $order->id . ' dikonfirmasi sebagai Paid');
+        })->name('orders.confirm');
+
+        Route::patch('/orders/{order}/cancel', function (Order $order) {
+            // Kembalikan stok & kurangi sold
+            foreach ($order->items as $item) {
+                $item->product->increment('stock', $item->quantity);
+                $item->product->decrement('sold', $item->quantity);
+            }
+
+            $order->update(['status' => 'cancelled']);
+            return back()->with('success', 'Pesanan #' . $order->id . ' dibatalkan & stok dikembalikan');
+        })->name('orders.cancel');
     });
 
-// Include route auth Breeze
+// Include route auth dari Breeze
 require __DIR__.'/auth.php';

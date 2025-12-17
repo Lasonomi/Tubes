@@ -41,31 +41,53 @@
                     return;
                 }
 
-                // 1. Penjualan Per Hari
-                const dailyCtx = document.getElementById('dailySalesChart').getContext('2d');
-                new Chart(dailyCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['01 Dec', '02 Dec', '03 Dec', '04 Dec', '05 Dec', '06 Dec', '07 Dec', '08 Dec', '09 Dec', '10 Dec',
-                                 '11 Dec', '12 Dec', '13 Dec', '14 Dec', '15 Dec', '16 Dec', '17 Dec', '18 Dec', '19 Dec', '20 Dec',
-                                 '21 Dec', '22 Dec', '23 Dec', '24 Dec', '25 Dec', '26 Dec', '27 Dec', '28 Dec', '29 Dec', '30 Dec', '31 Dec'],
-                        datasets: [{
-                            label: 'Total Penjualan (Rp)',
-                            data: [500000, 1200000, 800000, 1800000, 1500000, 2200000, 1900000, 2800000, 2500000, 3200000,
-                                   3000000, 3800000, 3500000, 4200000, 4000000, 4800000, 4500000, 5200000, 5000000, 5800000,
-                                   5500000, 6200000, 6000000, 6800000, 6500000, 7200000, 7000000, 7800000, 7500000, 8200000, 8000000],
-                            borderColor: '#4f46e5',
-                            backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: { legend: { position: 'top' } },
-                        scales: { y: { beginAtZero: true } }
-                    }
-                });
+              // 1. Penjualan Per Hari (Desember 2025 - Data Realistis)
+                        const dailyCtx = document.getElementById('dailySalesChart').getContext('2d');
+                        new Chart(dailyCtx, {
+                            type: 'line',
+                            data: {
+                                labels: @json($labels),
+                                datasets: [{
+                                    label: 'Total Penjualan (Rp)',
+                                    data: @json($data),
+                                    borderColor: '#4f46e5',
+                                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                    tension: 0.4,
+                                    fill: true,
+                                    pointBackgroundColor: '#4f46e5',
+                                    pointRadius: 5,
+                                    pointHoverRadius: 8
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: 'Penjualan Harian (1 Des - ' + new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) + ')',
+                                        font: { size: 18 }
+                                    },
+                                    legend: { position: 'top' },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: function(value) {
+                                                return 'Rp ' + value.toLocaleString('id-ID');
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
 
                 // 2. Top Produk
                 const topCtx = document.getElementById('topProductsChart').getContext('2d');
@@ -103,15 +125,20 @@
                     }
                 });
 
-                // 4. Status Order
+            
+                // 4. Status Pesanan
                 const statusCtx = document.getElementById('orderStatusChart').getContext('2d');
                 new Chart(statusCtx, {
                     type: 'pie',
                     data: {
-                        labels: ['Pending', 'Paid', 'Shipped', 'Completed'],
+                        labels: ['Paid', 'Shipped', 'Completed'],
                         datasets: [{
-                            data: [{{ $orderStats['pending'] }}, {{ $orderStats['paid'] ?? 0 }}, {{ $orderStats['shipped'] ?? 0 }}, {{ $orderStats['completed'] ?? 0 }}],
-                            backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6']
+                            data: [
+                                {{ $orderStats['paid'] ?? 0 }},
+                                {{ $orderStats['shipped'] ?? 0 }},
+                                {{ $orderStats['completed'] ?? 0 }}
+                            ],
+                            backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6']
                         }]
                     },
                     options: { responsive: true }

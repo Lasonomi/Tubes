@@ -23,6 +23,20 @@
                 <div class="max-w-xl">
                     @include('profile.partials.delete-user-form')
                 </div>
+
+                <div>
+                <x-input-label for="phone" value="Nomor Handphone" />
+                <x-text-input
+                    id="phone"
+                    name="phone"
+                    type="text"
+                    class="mt-1 block w-full"
+                    :value="old('phone', $user->phone)"
+                    placeholder="08xxxxxxxxxx"
+                />
+                <x-input-error class="mt-2" :messages="$errors->get('phone')" />
+            </div>
+
             </div>
         </div>
     </div>

@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Address;
 
 class User extends Authenticatable
 {
@@ -18,11 +19,22 @@ class User extends Authenticatable
      * @var list<string>
      */
         protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role', // tambah ini
+        'name', 
+        'email', 
+        'password', 
+        'role', 
+        'phone',
     ];
+
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
+
+    public function primaryAddress()
+    {
+        return $this->hasOne(Address::class)->where('is_primary', true);
+    }
 
     /**
      * The attributes that should be hidden for serialization.

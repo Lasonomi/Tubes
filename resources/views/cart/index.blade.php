@@ -112,12 +112,6 @@
                                 </div>
                             </div>
 
-                            <div class="mt-10">
-                                <a href="{{ route('checkout.form') }}" class="block text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-2xl py-6 rounded-2xl transition shadow-2xl">
-                                    Lanjut ke Checkout →
-                                </a>
-                            </div>
-
                             <div class="mt-8 text-center">
                                 <a href="{{ route('shop.index') }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-lg">
                                     ← Lanjut Belanja

@@ -2,6 +2,14 @@
     <div class="min-h-screen bg-gray-50 py-12">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 class="text-4xl font-bold text-gray-800 mb-10 text-center">Riwayat Pembelian</h1>
+            <div class="mb-8 text-left">
+                <a href="{{ url()->previous() }}" class="text-indigo-600 hover:text-indigo-800 font-medium text-xl transition flex items-center justify-center gap-2">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Kembali
+                </a>
+            </div>
 
             @if(session('success'))
                 <div class="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg mb-8 text-center">

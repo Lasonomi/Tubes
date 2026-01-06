@@ -1,7 +1,16 @@
 <x-app-layout>
     <div class="min-h-screen bg-gray-50 py-12">
         <div class="max-w-7xl mx-auto px-6">
-            <h1 class="text-4xl font-bold text-gray-800 mb-12 text-center">Wishlist Favorit ❤️</h1>
+            <div class="flex items-center justify-between mb-12">
+                <a href="{{ url()->previous() }}" class="flex items-center gap-3 text-indigo-600 hover:text-indigo-800 font-medium text-xl transition">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Kembali
+                </a>
+                <h1 class="text-4xl font-bold text-gray-800">Wishlist</h1>
+                <div></div>
+            </div>
 
             @if(count(session('wishlist', [])) == 0)
                 <div class="text-center py-24 bg-white rounded-3xl shadow-lg">

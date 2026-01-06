@@ -42,9 +42,21 @@
                     <!-- Harga & Stok -->
                     <div class="flex items-end gap-8">
                         <div>
-                            <p class="text-6xl font-bold text-indigo-600">
-                                Rp {{ number_format($product->price, 0, ',', '.') }}
-                            </p>
+                           @if($product->discount_percentage > 0)
+                                <p class="text-5xl font-bold text-indigo-600">
+                                    Rp {{ number_format($product->discounted_price, 0, ',', '.') }}
+                                </p>
+                                <p class="text-2xl text-gray-500 line-through mt-2">
+                                    Rp {{ number_format($product->price, 0, ',', '.') }}
+                                </p>
+                                <span class="bg-red-100 text-red-800 font-bold px-6 py-3 rounded-full mt-4 inline-block text-xl">
+                                    -{{ $product->discount_percentage }}%
+                                </span>
+                            @else
+                                <p class="text-5xl font-bold text-indigo-600">
+                                    Rp {{ number_format($product->price, 0, ',', '.') }}
+                                </p>
+                            @endif
                         </div>
                         <div>
                             @if($product->stock < 10)

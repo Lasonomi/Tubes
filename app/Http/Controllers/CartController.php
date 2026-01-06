@@ -19,44 +19,46 @@ class CartController extends Controller
     }
 
     /**
-     * Tambah produk ke keranjang
+     * Tambah produk ke keranjang (dengan diskon otomatis)
      */
-    public function add(Request $request, Product $product)
+   public function add(Request $request, Product $product)
     {
-        // Cek stok
         if ($product->stock < 1) {
             return back()->with('error', 'Maaf, stok produk sudah habis!');
         }
 
         $cart = session('cart', []);
 
-        $newQuantity = 1;
+        $quantity = 1;
         if (isset($cart[$product->id])) {
-            $newQuantity = $cart[$product->id]['quantity'] + 1;
+            $quantity = $cart[$product->id]['quantity'] + 1;
         }
 
-        // Cek apakah stok cukup
-        if ($newQuantity > $product->stock) {
+        if ($quantity > $product->stock) {
             return back()->with('error', 'Stok tidak cukup! Hanya tersisa ' . $product->stock . ' unit.');
         }
 
-        // Tambah atau update item di cart
+        // Hitung harga setelah diskon (jika ada diskon aktif)
+        $finalPrice = $product->discounted_price; // accessor dari model Product
+
         $cart[$product->id] = [
-            'name'     => $product->name,
-            'price'    => $product->price,
-            'image'    => $product->image,
-            'quantity' => $newQuantity,
+            'name'               => $product->name,
+            'price'              => $product->price, // harga asli (untuk tampilan dicoret)
+            'discounted_price'   => $finalPrice,     // harga setelah diskon (untuk perhitungan)
+            'discount_percentage'=> $product->discount_percentage ?? 0,
+            'image'              => $product->image,
+            'quantity'           => $quantity,
+            'stock'              => $product->stock,
         ];
 
         session(['cart' => $cart]);
 
         return back()->with('success', 'Produk berhasil ditambahkan ke keranjang!');
     }
-
     /**
      * Update jumlah item di keranjang
      */
-        public function update(Request $request)
+    public function update(Request $request)
     {
         $request->validate([
             'id'       => 'required|integer',
@@ -69,6 +71,12 @@ class CartController extends Controller
         $cart = session('cart', []);
 
         if (isset($cart[$id])) {
+            // Cek stok cukup
+            $product = Product::find($id);
+            if ($quantity > $product->stock) {
+                return back()->with('error', 'Stok tidak cukup! Hanya tersisa ' . $product->stock . ' unit.');
+            }
+
             $cart[$id]['quantity'] = $quantity;
             session(['cart' => $cart]);
 
@@ -96,118 +104,76 @@ class CartController extends Controller
     }
 
     /**
-     * Proses checkout & simpan order
+     * Tampilkan form checkout
      */
-public function checkout()
-{
-    $cart = session('cart', []);
-    $user = auth()->user();
-
-    if (!$user->phone || $user->addresses()->count() == 0) {
-        return back()->with('error', 'Lengkapi nomor HP & alamat pengiriman di profile sebelum checkout!');
-    }
-
-    if (empty($cart)) {
-        return back()->with('error', 'Keranjang belanja kosong!');
-    }
-
-    $total = 0;
-    foreach ($cart as $item) {
-        $total += $item['price'] * $item['quantity'];
-    }
-
-    // Buat order langsung dengan status 'paid' atau 'processing'
-    $order = Order::create([
-        'user_id' => Auth::id(),
-        'total'   => $total,
-        'status'  => 'paid', // langsung paid, siap packing
-    ]);
-
-    // Simpan item order + update stok & sold
-    foreach ($cart as $productId => $item) {
-        OrderItem::create([
-            'order_id'   => $order->id,
-            'product_id' => $productId,
-            'quantity'   => $item['quantity'],
-            'price'      => $item['price'],
-        ]);
-
-        $product = Product::find($productId);
-        $product->decrement('stock', $item['quantity']);
-        $product->increment('sold', $item['quantity']);
-    }
-
-    // Kosongkan keranjang
-    session()->forget('cart');
-
-    // Redirect ke halaman nota/invoice sederhana
-    return redirect()->route('orders.invoice', $order->id)
-                     ->with('success', 'Pembelian berhasil! Pesanan kamu siap diproses.');
-}
     public function checkoutForm()
-{
-    $cart = session('cart', []);
+    {
+        $cart = session('cart', []);
 
-    if (empty($cart)) {
-        return redirect()->route('cart.index')->with('error', 'Keranjang belanja kosong!');
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'Keranjang belanja kosong!');
+        }
+
+        $user = Auth::user();
+
+        // Validasi wajib punya HP & alamat
+        if (!$user->phone || $user->addresses()->count() == 0) {
+            return redirect()->route('profile.index')->with('error', 'Lengkapi nomor HP & alamat pengiriman di profile sebelum checkout!');
+        }
+
+        $addresses = $user->addresses()->get();
+
+        // Hitung total dengan diskon
+        $total = collect($cart)->sum(fn($item) => $item['discounted_price'] * $item['quantity']);
+
+        return view('checkout.index', compact('cart', 'addresses', 'total'));
     }
 
-    $user = Auth::user();
-
-    // Validasi wajib punya HP & alamat
-    if (!$user->phone || $user->addresses()->count() == 0) {
-        return redirect()->route('profile.index')->with('error', 'Lengkapi nomor HP & alamat pengiriman di profile sebelum checkout!');
-    }
-
-    $addresses = $user->addresses()->get();
-    $primaryAddress = $user->primaryAddress;
-
-    $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-
-    return view('checkout.index', compact('cart', 'addresses', 'primaryAddress', 'total'));
-}
-
-public function checkoutProcess(Request $request)
-{
-    $request->validate([
-        'address_id' => 'required|exists:addresses,id,user_id,' . Auth::id(),
-        'payment_method' => 'required|in:transfer,qris',
-    ]);
-
-    $cart = session('cart', []);
-
-    if (empty($cart)) {
-        return redirect()->route('cart.index')->with('error', 'Keranjang belanja kosong!');
-    }
-
-    $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-
-    // Simpan order
-    $order = Order::create([
-        'user_id' => Auth::id(),
-        'total' => $total,
-        'status' => 'paid', // instant paid
-        'payment_method' => $request->payment_method,
-        'address_id' => $request->address_id,
-    ]);
-
-    foreach ($cart as $id => $item) {
-        OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $id,
-            'quantity' => $item['quantity'],
-            'price' => $item['price'],
+    /**
+     * Proses checkout & simpan order (pakai harga diskon)
+     */
+    public function checkoutProcess(Request $request)
+    {
+        $request->validate([
+            'address_id'      => 'required|exists:addresses,id,user_id,' . Auth::id(),
+            'payment_method'  => 'required|in:transfer,qris',
         ]);
 
-        // Update stok & sold
-        $product = Product::find($id);
-        $product->decrement('stock', $item['quantity']);
-        $product->increment('sold', $item['quantity']);
+        $cart = session('cart', []);
+
+        if (empty($cart)) {
+            return redirect()->route('cart.index')->with('error', 'Keranjang belanja kosong!');
+        }
+
+        // Hitung total dengan harga diskon
+        $total = collect($cart)->sum(fn($item) => $item['discounted_price'] * $item['quantity']);
+
+        // Simpan order
+        $order = Order::create([
+            'user_id'        => Auth::id(),
+            'total'          => $total,
+            'status'         => 'paid',
+            'payment_method' => $request->payment_method,
+            'address_id'     => $request->address_id,
+        ]);
+
+        // Simpan item order + update stok & sold
+        foreach ($cart as $id => $item) {
+            OrderItem::create([
+                'order_id'   => $order->id,
+                'product_id' => $id,
+                'quantity'   => $item['quantity'],
+                'price'      => $item['discounted_price'], // simpan harga diskon ke DB
+            ]);
+
+            $product = Product::find($id);
+            $product->decrement('stock', $item['quantity']);
+            $product->increment('sold', $item['quantity']);
+        }
+
+        // Kosongkan cart
+        session()->forget('cart');
+
+        return redirect()->route('orders.invoice', $order)->with('success', 'Pesanan berhasil dibuat! Terima kasih telah berbelanja di WARDIÈRE.');
     }
-
-    // Kosongkan cart
-    session()->forget('cart');
-
-    return redirect()->route('orders.invoice', $order)->with('success', 'Pesanan berhasil dibuat!');
-}
 }

@@ -128,7 +128,7 @@
                                 Kembali Belanja
                             </a>
                         </div>
-                        <p class="text-sm text-gray-500 mt-8">Terima kasih telah berbelanja di <span class="font-bold">Wardière</span> 🛒</p>
+                        <p class="text-sm text-gray-500 mt-8">Terima kasih telah berbelanja di <span class="font-bold">eTOKOBAYU</span> 🛒</p>
                     </div>
                 </div>
             </div>

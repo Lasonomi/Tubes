@@ -1,6 +1,7 @@
 <x-app-layout>
     <div class="min-h-screen bg-gray-50 py-12">
         <div class="max-w-7xl mx-auto px-6">
+            <!-- Tombol Kembali & Judul -->
             <div class="flex items-center justify-between mb-12">
                 <a href="{{ url()->previous() }}" class="flex items-center gap-3 text-indigo-600 hover:text-indigo-800 font-medium text-xl transition">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8,7 +9,7 @@
                     </svg>
                     Kembali
                 </a>
-                <h1 class="text-4xl font-bold text-gray-800">Keranjang Pesanan</h1>
+                <h1 class="text-4xl font-bold text-gray-800">Keranjang Belanja</h1>
                 <div></div>
             </div>
 
@@ -38,7 +39,8 @@
                                 @php $total = 0 @endphp
                                 @foreach(session('cart') as $id => $item)
                                     @php 
-                                        $subtotal = $item['price'] * $item['quantity']; 
+                                        // Subtotal pakai harga diskon
+                                        $subtotal = $item['discounted_price'] * $item['quantity']; 
                                         $total += $subtotal; 
                                     @endphp
                                     <div class="p-8 flex items-center gap-8 hover:bg-gray-50 transition">
@@ -53,15 +55,32 @@
                                             @endif
                                         </div>
 
-                                        <!-- Nama & Harga -->
+                                        <!-- Nama & Harga Diskon -->
                                         <div class="flex-1">
                                             <h3 class="text-2xl font-bold text-gray-800">{{ $item['name'] }}</h3>
-                                            <p class="text-xl text-indigo-600 font-bold mt-3">
-                                                Rp {{ number_format($item['price'], 0, ',', '.') }} / item
-                                            </p>
+
+                                            <div class="mt-4 flex items-end gap-4">
+                                                <div>
+                                                    <p class="text-3xl font-bold text-indigo-600">
+                                                        Rp {{ number_format($item['discounted_price'], 0, ',', '.') }}
+                                                    </p>
+                                                    @if($item['discount_percentage'] > 0)
+                                                        <p class="text-xl text-gray-500 line-through">
+                                                            Rp {{ number_format($item['price'], 0, ',', '.') }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+
+                                                @if($item['discount_percentage'] > 0)
+                                                    <span class="bg-red-100 text-red-800 font-bold px-6 py-3 rounded-full text-xl">
+                                                        -{{ $item['discount_percentage'] }}%
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <p class="text-lg text-gray-600 mt-2">per item</p>
                                         </div>
 
-                                        <!-- Jumlah -->
+                                        <!-- Jumlah +/- -->
                                         <div class="flex items-center gap-4">
                                             <form action="{{ route('cart.update') }}" method="POST" class="flex items-center">
                                                 @csrf
@@ -77,15 +96,20 @@
                                             </form>
                                         </div>
 
-                                        <!-- Subtotal -->
+                                        <!-- Subtotal Diskon -->
                                         <div class="text-right min-w-48">
                                             <p class="text-lg text-gray-600">Subtotal</p>
                                             <p class="text-3xl font-bold text-indigo-600 mt-2">
                                                 Rp {{ number_format($subtotal, 0, ',', '.') }}
                                             </p>
+                                            @if($item['discount_percentage'] > 0)
+                                                <p class="text-lg text-gray-500 line-through">
+                                                    Rp {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}
+                                                </p>
+                                            @endif
                                         </div>
 
-                                        <!-- Hapus (Icon Trash Merah, Jelas) -->
+                                        <!-- Hapus -->
                                         <div class="ml-6">
                                             <form action="{{ route('cart.remove', $id) }}" method="POST">
                                                 @csrf @method('DELETE')
@@ -108,24 +132,18 @@
                         <div class="bg-white rounded-3xl shadow-lg border border-gray-200 p-8 sticky top-24">
                             <h2 class="text-3xl font-bold text-gray-800 mb-8">Ringkasan Belanja</h2>
 
-                            <div class="border-b border-gray-200 pb-8">
+                            <div class="border-b-4 border-indigo-600 pb-8">
                                 <div class="flex justify-between text-xl mb-4">
                                     <span class="text-gray-600">Total Harga ({{ count(session('cart')) }} item)</span>
                                     <span class="font-bold text-indigo-600 text-3xl">
                                         Rp {{ number_format($total, 0, ',', '.') }}
                                     </span>
                                 </div>
-                                <div class="flex justify-between text-lg">
-                                    <span class="text-gray-600">Subtotal</span>
-                                    <span class="font-bold text-indigo-600">
-                                        Rp {{ number_format($total, 0, ',', '.') }}
-                                    </span>
-                                </div>
                             </div>
 
-                            <!-- Tombol Checkout (Besar & Menonjol) -->
+                            <!-- Tombol Checkout -->
                             <div class="mt-10">
-                                <a href="{{ route('checkout.form') }}" class="block text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-2xl py-6 rounded-2xl transition shadow-2xl flex items-center justify-center gap-4">
+                                <a href="{{ route('checkout.form') }}" class="block text-center bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-2xl py-6 rounded-3xl transition shadow-2xl flex items-center justify-center gap-4">
                                     Lanjut ke Checkout →
                                 </a>
                             </div>
@@ -147,8 +165,11 @@
     <script>
         function increment(button) {
             const input = button.parentNode.querySelector('input[type=number]');
-            input.stepUp();
-            input.form.submit();
+            const max = parseInt(input.getAttribute('max')) || 999;
+            if (parseInt(input.value) < max) {
+                input.stepUp();
+                input.form.submit();
+            }
         }
 
         function decrement(button) {

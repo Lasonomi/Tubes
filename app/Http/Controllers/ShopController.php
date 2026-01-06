@@ -10,36 +10,31 @@ class ShopController extends Controller
 {
     public function index(Request $request)
     {
-        $categories = Category::all();
-
-        $query = Product::with('category');
+        $query = Product::query()->with('category', 'discount');
 
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                ->orWhereHas('category', function($q2) use ($search) {
-                    $q2->where('name', 'like', "%{$search}%");
-                });
-            });
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
         }
 
+        $products = $query->latest()->paginate(12)->withQueryString();
 
-        if ($request->filled('sort')) {
-            if ($request->sort == 'price_asc') $query->orderBy('price');
-            if ($request->sort == 'price_desc') $query->orderByDesc('price');
-            if ($request->sort == 'newest') $query->latest();
-        }
+        $categories = Category::all();
 
-        $products = $query->paginate(16);
+        $featuredProducts = Product::with('discount')
+            ->whereHas('discount', fn($q) => $q->active())
+            ->inRandomOrder()
+            ->take(6)
+            ->get();
 
-        // Data tambahan untuk home
-        $featuredProducts = Product::where('stock', '>', 0)->inRandomOrder()->take(3)->get(); // contoh featured
-        $topProducts = Product::orderByDesc('sold')->take(8)->get();
+        // TAMBAHKAN BARIS INI: Produk Terlaris
+        $topProducts = Product::with('category', 'discount')
+            ->orderByDesc('sold')
+            ->take(8)
+            ->get();
 
         return view('shop.index', compact('products', 'categories', 'featuredProducts', 'topProducts'));
     }

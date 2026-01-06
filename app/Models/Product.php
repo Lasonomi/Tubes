@@ -26,4 +26,25 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function discount()
+    {
+        return $this->hasOne(Discount::class);
+    }
+    
+    public function getDiscountedPriceAttribute()
+    {
+        if ($this->discount && $this->discount->isActive()) {
+            return $this->price * (1 - $this->discount->percentage / 100);
+        }
+        return $this->price;
+    }
+
+    public function getDiscountPercentageAttribute()
+    {
+        if ($this->discount && $this->discount->isActive()) {
+            return $this->discount->percentage;
+        }
+        return 0;
+    }
 }

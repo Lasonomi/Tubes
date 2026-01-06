@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="min-h-screen bg-gray-50">
-        <!-- HEADER NAVIGATION LENGKAP (Semua di sini) -->
+        <!-- HEADER NAVIGATION LENGKAP -->
         <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-md">
             <div class="max-w-7xl mx-auto px-6 py-5">
                 <div class="flex items-center justify-between">
@@ -17,15 +17,8 @@
                         </button>
 
                         <!-- Dropdown Menu -->
-                        <div x-show="dropdownOpen" 
-                             @click.away="dropdownOpen = false" 
-                             x-transition:enter="transition ease-out duration-200"
-                             x-transition:enter-start="opacity-0 scale-95"
-                             x-transition:enter-end="opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-150"
-                             x-transition:leave-start="opacity-100 scale-100"
-                             x-transition:leave-end="opacity-0 scale-95"
-                             class="absolute left-0 mt-4 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
+                        <div x-show="dropdownOpen" @click.away="dropdownOpen = false" 
+                             x-transition class="absolute left-0 mt-4 w-72 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden z-50">
                             <a href="{{ route('profile.index') }}" class="block px-8 py-5 text-gray-800 hover:bg-indigo-50 transition text-lg font-medium">
                                 Profil Saya
                             </a>
@@ -59,7 +52,6 @@
 
                     <!-- Right: Wishlist & Keranjang -->
                     <div class="flex items-center gap-10">
-                        <!-- Wishlist -->
                         <a href="{{ route('wishlist.index') }}" class="relative flex items-center gap-4 text-gray-800 hover:text-red-600 transition text-xl font-medium">
                             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -72,7 +64,6 @@
                             @endif
                         </a>
 
-                        <!-- Keranjang -->
                         <a href="{{ route('cart.index') }}" class="relative flex items-center gap-4 text-gray-800 hover:text-indigo-600 transition text-xl font-medium">
                             <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -89,105 +80,136 @@
             </div>
         </header>
 
-        <!-- Search Bar di Bawah Header -->
-        <div class="bg-gray-100 py-6 border-b border-gray-200">
-            <div class="max-w-4xl mx-auto px-6">
-                <form action="{{ route('shop.index') }}" method="GET">
-                    <div class="relative">
-                        <input type="text" name="search" value="{{ request('search') }}" 
-                               placeholder="Cari produk, brand, atau kategori..." 
-                               class="w-full px-8 py-5 pr-16 text-xl border-2 border-gray-300 rounded-full focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition shadow-inner">
-                        <button type="submit" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full transition shadow-lg">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
+        <!-- Search Bar + Filter Kategori -->
+        <div class="bg-gray-100 py-8 border-b border-gray-200">
+            <div class="max-w-6xl mx-auto px-6">
+                <form action="{{ route('shop.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                    <div class="md:col-span-2">
+                        <label class="block text-xl font-bold text-gray-800 mb-3">Cari Produk</label>
+                        <div class="relative">
+                            <input type="text" name="search" value="{{ request('search') }}" 
+                                   placeholder="Ketik nama produk, brand, atau kategori..." 
+                                   class="w-full px-8 py-5 pr-16 text-xl border-2 border-gray-300 rounded-full focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition shadow-inner">
+                            <button type="submit" class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full transition shadow-lg">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xl font-bold text-gray-800 mb-3">Kategori</label>
+                        <select name="category" class="w-full px-8 py-5 text-xl border-2 border-gray-300 rounded-full focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition shadow-inner">
+                            <option value="">Semua Kategori</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-2xl py-5 rounded-full transition shadow-2xl">
+                            Cari Sekarang
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- Konten Shop -->
+        <!-- Badge Hasil Filter -->
+        @if(request('search') || request('category'))
+            <div class="max-w-7xl mx-auto px-6 mt-8">
+                <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-6 text-center">
+                    <p class="text-2xl text-indigo-800 font-bold">
+                        Menampilkan hasil untuk:
+                        @if(request('search'))
+                            <span class="mx-2">"{{ request('search') }}"</span>
+                        @endif
+                        @if(request('category'))
+                            @if(request('search')) & @endif
+                            <span class="mx-2">{{ $categories->find(request('category'))?->name ?? 'Kategori' }}</span>
+                        @endif
+                    </p>
+                    <a href="{{ route('shop.index') }}" class="text-indigo-600 hover:underline font-medium mt-4 inline-block">
+                        Hapus filter →
+                    </a>
+                </div>
+            </div>
+        @endif
+
+        <!-- Konten Utama -->
         <div class="max-w-7xl mx-auto px-6 py-12">
-            <!-- Slider Promo -->
-            <div class="mb-16">
-                <h2 class="text-3xl font-bold text-gray-800 mb-8">Promo Spesial Hari Ini</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    @foreach($featuredProducts as $product)
-                        <a href="{{ route('products.show', $product) }}" class="block group relative">
-                            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition transform hover:-translate-y-2">
-                                <div class="relative">
-                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-80 object-cover group-hover:scale-105 transition">
-                                    <div class="absolute top-4 left-4 bg-red-600 text-white font-bold text-xl px-6 py-3 rounded-full shadow-lg">
-                                        -30%
+            <!-- Promo Spesial Hari Ini -->
+            @if($featuredProducts->count() > 0)
+                <div class="mb-18">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-12 text-center">Promo Spesial Hari Ini</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                        @foreach($featuredProducts as $product)
+                            <a href="{{ route('products.show', $product) }}" class="block group">
+                                <div class="bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition transform hover:-translate-y-4">
+                                    <div class="relative">
+                                        <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-96 object-cover group-hover:scale-105 transition">
+                                        <div class="absolute top-6 left-6 bg-red-600 text-white font-bold text-4xl px-10 py-5 rounded-2xl shadow-2xl">
+                                            -{{ $product->discount->percentage }}%
+                                        </div>
+                                        <div class="absolute top-6 right-6">
+                                            <form action="{{ route('wishlist.add', $product) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="bg-white rounded-full p-5 shadow-2xl hover:shadow-3xl transition">
+                                                    <svg class="w-10 h-10 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <div class="p-10">
+                                        <h3 class="text-3xl font-bold text-gray-800 mb-6">{{ $product->name }}</h3>
+                                        <p class="text-5xl font-bold text-indigo-600">
+                                            Rp {{ number_format($product->discounted_price, 0, ',', '.') }}
+                                        </p>
+                                        <p class="text-2xl text-gray-500 line-through mt-3">
+                                            Rp {{ number_format($product->price, 0, ',', '.') }}
+                                        </p>
                                     </div>
                                 </div>
-                                <div class="p-8 text-white">
-                                    <h3 class="text-2xl font-bold mb-4">{{ $product->name }}</h3>
-                                    <p class="text-4xl font-bold">Rp {{ number_format($product->price * 0.7, 0, ',', '.') }}</p>
-                                    <p class="text-xl line-through opacity-80 mt-2">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
-                                    <p class="mt-6 font-bold text-lg opacity-90">Lihat Detail →</p>
-                                </div>
-                            </div>
-
-                            <!-- Wishlist Button -->
-                            <div class="absolute top-4 right-4">
-                                <form action="{{ route('wishlist.add', $product) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="bg-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition {{ in_array($product->id, session('wishlist', [])) ? 'text-red-600' : 'text-gray-400' }}">
-                                        <svg class="w-8 h-8" fill="{{ in_array($product->id, session('wishlist', [])) ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
-                        </a>
-                    @endforeach
+                            </a>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-
-            <!-- Kategori Cepat -->
-            <div class="mb-16">
-                <h2 class="text-3xl font-bold text-gray-800 mb-8">Belanja Berdasarkan Kategori</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    @foreach($categories as $cat)
-                        <a href="{{ route('shop.index', ['category' => $cat->id]) }}" class="group">
-                            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 text-center hover:shadow-2xl transition transform hover:-translate-y-2">
-                                <div class="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-6 group-hover:scale-110 transition"></div>
-                                <p class="text-xl font-bold text-gray-800">{{ $cat->name }}</p>
-                                <p class="text-gray-600 mt-2">{{ $cat->products->count() }} produk</p>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
+            @endif
 
             <!-- Produk Terlaris -->
-            <div class="mb-16">
-                <h2 class="text-3xl font-bold text-gray-800 mb-8">Produk Terlaris</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    @foreach($topProducts as $product)
+                <div class="mb-16">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-8">Produk Terlaris</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                        @foreach($topProducts as $product)
                         <a href="{{ route('products.show', $product) }}" class="block group relative">
-                            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition">
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-72 object-cover group-hover:scale-105 transition">
-                                <div class="p-6">
+                            <div class="bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition">
+                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-80 object-cover group-hover:scale-105 transition">
+                                <div class="p-8">
                                     <p class="text-sm text-gray-600">{{ $product->category->name }}</p>
-                                    <h3 class="text-xl font-bold text-gray-800 mt-2 line-clamp-2">{{ $product->name }}</h3>
-                                    <p class="text-2xl font-bold text-indigo-600 mt-4">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
+                                    <h3 class="text-xl font-bold text-gray-800 mt-3 line-clamp-2">{{ $product->name }}</h3>
+                                    <p class="text-3xl font-bold text-indigo-600 mt-6">
+                                        Rp {{ number_format($product->discounted_price ?? $product->price, 0, ',', '.') }}
+                                    </p>
                                     <p class="text-sm text-gray-600 mt-2">{{ $product->sold }} terjual</p>
                                 </div>
-                            </div>
 
-                            <!-- Wishlist Button -->
-                            <div class="absolute top-4 right-4">
-                                <form action="{{ route('wishlist.add', $product) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="bg-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition {{ in_array($product->id, session('wishlist', [])) ? 'text-red-600' : 'text-gray-400' }}">
-                                        <svg class="w-8 h-8" fill="{{ in_array($product->id, session('wishlist', [])) ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                        </svg>
-                                    </button>
-                                </form>
+                                <!-- Wishlist -->
+                                <div class="absolute top-4 right-4">
+                                    <form action="{{ route('wishlist.add', $product) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="bg-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition">
+                                            <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </a>
                     @endforeach
@@ -196,41 +218,66 @@
 
             <!-- Semua Produk -->
             <div>
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-3xl font-bold text-gray-800">Semua Produk</h2>
+                <div class="flex justify-between items-center mb-12">
+                    <h2 class="text-4xl font-bold text-gray-800">Semua Produk</h2>
                     <p class="text-xl text-gray-600">{{ $products->total() }} produk ditemukan</p>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                    @foreach($products as $product)
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-10">
+                    @forelse($products as $product)
                         <a href="{{ route('products.show', $product) }}" class="block group relative">
-                            <div class="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition">
-                                <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-80 object-cover group-hover:scale-105 transition">
-                                <div class="p-6">
+                            <div class="bg-white rounded-3xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-2xl transition">
+                                <div class="relative">
+                                    <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="w-full h-80 object-cover group-hover:scale-105 transition">
+                                    @if($product->discount_percentage > 0)
+                                        <div class="absolute top-4 right-4 bg-red-600 text-white font-bold px-6 py-3 rounded-full text-xl shadow-lg">
+                                            -{{ $product->discount_percentage }}%
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="p-8">
                                     <p class="text-sm text-gray-600">{{ $product->category->name }}</p>
-                                    <h3 class="text-xl font-bold text-gray-800 mt-2 line-clamp-2">{{ $product->name }}</h3>
-                                    <p class="text-2xl font-bold text-indigo-600 mt-4">Rp {{ number_format($product->price, 0, ',', '.') }}</p>
-                                    <p class="text-sm text-gray-600 mt-2">Stok: {{ $product->stock }}</p>
-                                    <p class="text-sm text-green-600 mt-3 font-medium">Lihat Detail →</p>
+                                    <h3 class="text-xl font-bold text-gray-800 mt-3 line-clamp-2">{{ $product->name }}</h3>
+                                    <div class="mt-6">
+                                        @if($product->discount_percentage > 0)
+                                            <p class="text-3xl font-bold text-indigo-600">
+                                                Rp {{ number_format($product->discounted_price, 0, ',', '.') }}
+                                            </p>
+                                            <p class="text-lg text-gray-500 line-through">
+                                                Rp {{ number_format($product->price, 0, ',', '.') }}
+                                            </p>
+                                        @else
+                                            <p class="text-3xl font-bold text-indigo-600">
+                                                Rp {{ number_format($product->price, 0, ',', '.') }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <p class="text-sm text-gray-600 mt-4">Stok: {{ $product->stock }}</p>
+                                </div>
+
+                                <!-- Wishlist -->
+                                <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition">
+                                    <form action="{{ route('wishlist.add', $product) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="bg-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition">
+                                            <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                            </svg>
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-
-                            <!-- Wishlist Button -->
-                            <div class="absolute top-4 right-4">
-                                <form action="{{ route('wishlist.add', $product) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="bg-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition {{ in_array($product->id, session('wishlist', [])) ? 'text-red-600' : 'text-gray-400' }}">
-                                        <svg class="w-8 h-8" fill="{{ in_array($product->id, session('wishlist', [])) ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                                        </svg>
-                                    </button>
-                                </form>
-                            </div>
                         </a>
-                    @endforeach
+                    @empty
+                        <div class="col-span-full text-center py-20">
+                            <p class="text-3xl text-gray-600">Tidak ada produk ditemukan</p>
+                            <p class="text-xl text-gray-500 mt-4">Coba kata kunci atau kategori lain</p>
+                        </div>
+                    @endforelse
                 </div>
 
-                <div class="mt-12 flex justify-center">
+                <!-- Pagination -->
+                <div class="mt-16 flex justify-center">
                     {{ $products->links() }}
                 </div>
             </div>

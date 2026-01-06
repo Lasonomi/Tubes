@@ -6,6 +6,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AddressController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\DiscountController;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Category;
@@ -142,6 +143,12 @@ Route::middleware(['auth', 'admin'])
 
             return view('admin.notifications', compact('newOrders', 'lowStockProducts', 'totalNotifications'));
         })->name('notifications');
+
+        // Diskon Admin (Satu File View)
+        Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts');
+        Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts');
+        Route::patch('/discounts/{discount}', [DiscountController::class, 'update'])->name('discounts');
+        Route::delete('/discounts/{discount}', [DiscountController::class, 'destroy'])->name('discounts');
     });
 
 // Include route auth Breeze (login, register, forgot password, dll)

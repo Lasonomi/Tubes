@@ -48,8 +48,11 @@ class DiscountController extends Controller
     /**
      * Update diskon yang sudah ada
      */
-    public function update(Request $request, Discount $discount)
+    public function update(Request $request)
     {
+        $discountId = $request->discount_id;
+        $discount = Discount::findOrFail($discountId);
+
         $validated = $request->validate([
             'product_id'  => 'required|exists:products,id|unique:discounts,product_id,' . $discount->id,
             'percentage'  => 'required|integer|min:1|max:100',
@@ -59,20 +62,33 @@ class DiscountController extends Controller
 
         $discount->update($validated);
 
-        return redirect()
-            ->route('admin.discounts')
-            ->with('success', 'Diskon berhasil diperbarui!');
+        return redirect()->route('admin.discounts')->with('success', 'Diskon berhasil diperbarui!');
+    }
+    public function handle(Request $request)
+    {
+        if ($request->isMethod('delete')) {
+            return $this->destroy($request);
+        }
+
+        if ($request->isMethod('patch')) {
+            return $this->update($request);
+        }
+
+        if ($request->isMethod('post')) {
+            return $this->store($request);
+        }
+
+        return $this->index($request);
     }
 
     /**
      * Hapus diskon
      */
-    public function destroy(Discount $discount)
+  public function destroy(Request $request)
     {
+        $discount = Discount::findOrFail($request->discount_id);
         $discount->delete();
 
-        return redirect()
-            ->route('admin.discounts')
-            ->with('success', 'Diskon berhasil dihapus!');
+        return redirect()->route('admin.discounts')->with('success', 'Diskon berhasil dihapus!');
     }
 }

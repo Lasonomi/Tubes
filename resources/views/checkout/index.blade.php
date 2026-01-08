@@ -67,7 +67,7 @@
                                         <input type="radio" name="payment_method" value="transfer" class="float-right mt-2 w-6 h-6 text-indigo-600 focus:ring-indigo-500" required>
                                         <div>
                                             <p class="font-bold text-2xl text-gray-800">Transfer Bank</p>
-                                            <p class="text-xl text-gray-700 mt-4">BCA a.n WARDIÈRE - 1234567890</p>
+                                            <p class="text-xl text-gray-700 mt-4">BCA a.n eTOKOBAYU - 1234567890</p>
                                             <p class="text-lg text-gray-600 mt-3">Konfirmasi pembayaran manual setelah transfer</p>
                                         </div>
                                     </label>
@@ -77,7 +77,7 @@
                                         <div>
                                             <p class="font-bold text-2xl text-gray-800">QRIS (Semua E-Wallet & Mobile Banking)</p>
                                             <div class="mt-6 text-center">
-                                                <img src="{{ asset('images/qris.jpg') }}" alt="QRIS Wardière" class="w-64 h-64 mx-auto rounded-2xl shadow-lg">
+                                                <img src="{{ asset('images/qris.jpg') }}" alt="QRIS eTOKOBAYU" class="w-64 h-64 mx-auto rounded-2xl shadow-lg">
                                                 <p class="text-lg text-gray-600 mt-4">Scan QRIS di atas dengan aplikasi pembayaran Anda</p>
                                             </div>
                                         </div>
@@ -125,7 +125,7 @@
                                     </button>
 
                                     <p class="text-center text-gray-600 mt-6 text-sm">
-                                        Dengan menekan bayar, Anda menyetujui syarat & ketentuan Wardière.
+                                        Dengan menekan bayar, Anda menyetujui syarat & ketentuan eTOKOBAYU.
                                     </p>
                                 </div>
                             </div>

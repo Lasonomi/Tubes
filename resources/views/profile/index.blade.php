@@ -272,7 +272,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                                     </svg>
                                     <p class="text-xl font-bold">Email</p>
-                                    <p class="text-2xl mt-2">cs@wardiere.com</p>
+                                    <p class="text-2xl mt-2">cs@eTOKOBAYU.com</p>
                                     <p class="mt-2 opacity-90">Balas dalam 1x24 jam</p>
                                 </div>
 

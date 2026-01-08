@@ -87,18 +87,19 @@ Route::middleware(['auth', 'admin'])
             $totalProducts = Product::count();
             $lastViewed = session('admin_notifications_viewed_at', now()->startOfDay());
             $newOrdersToday = Order::where('created_at', '>', $lastViewed)->count();
+            $totalOrders = Order::count();
             $lowStockCount = Product::where('stock', '<', 10)->count();
             $notifications = $newOrdersToday + $lowStockCount;
 
-            $monthlySales = Order::whereMonth('created_at', 12)
-                                 ->whereYear('created_at', 2025)
+            $monthlySales = Order::whereMonth('created_at', 01)
+                                 ->whereYear('created_at', 2026)
                                  ->sum('total');
 
             $topProducts = Product::orderByDesc('sold')->take(5)->get();
             $lowStock = Product::where('stock', '<', 10)->orderBy('stock')->take(5)->get();
 
             return view('admin.dashboard', compact(
-                'totalProducts', 'newOrdersToday', 'notifications', 'monthlySales', 'topProducts', 'lowStock'
+                'totalProducts','totalOrders', 'newOrdersToday', 'notifications', 'monthlySales', 'topProducts', 'lowStock'
             ));
         })->name('dashboard');
 
@@ -145,10 +146,7 @@ Route::middleware(['auth', 'admin'])
         })->name('notifications');
 
         // Diskon Admin (Satu File View)
-        Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts');
-        Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts');
-        Route::patch('/discounts/{discount}', [DiscountController::class, 'update'])->name('discounts');
-        Route::delete('/discounts/{discount}', [DiscountController::class, 'destroy'])->name('discounts');
+       Route::match(['get', 'post', 'patch', 'delete'], '/discounts', [DiscountController::class, 'handle'])->name('discounts');
     });
 
 // Include route auth Breeze (login, register, forgot password, dll)

@@ -10,9 +10,12 @@
                 {{ isset($editDiscount) ? 'Edit Diskon' : 'Tambah Diskon Baru' }}
             </h2>
 
-           <form action="{{ isset($editDiscount) ? route('admin.discounts', $editDiscount) : route('admin.discounts') }}" method="POST">
+           <form action="{{ isset($editDiscount) ? route('admin.discounts') : route('admin.discounts') }}" method="POST">
                 @csrf
-                @if(isset($editDiscount)) @method('PATCH') @endif
+                @if(isset($editDiscount))
+                    @method('PATCH')
+                    <input type="hidden" name="discount_id" value="{{ $editDiscount->id }}">
+                @endif
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
@@ -32,25 +35,22 @@
                         <input type="number" name="percentage" value="{{ isset($editDiscount) ? $editDiscount->percentage : '' }}" min="1" max="100" 
                                class="mt-2 w-full px-6 py-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition" required>
                     </div>
+                        <!-- Input Tanggal Mulai (Edit Mode) -->
+                        <input type="date" name="start_date" 
+                            value="{{ isset($editDiscount) && $editDiscount->start_date ? \Carbon\Carbon::parse($editDiscount->start_date)->format('Y-m-d') : '' }}" 
+                            class="mt-2 w-full px-6 py-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition">
 
-                    <div>
-                        <label class="text-gray-700 font-medium">Tanggal Mulai (Opsional)</label>
-                        <input type="date" name="start_date" value="{{ isset($editDiscount) && $editDiscount->start_date ? $editDiscount->start_date->format('Y-m-d') : '' }}" 
-                               class="mt-2 w-full px-6 py-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition">
+                        <!-- Input Tanggal Berakhir (Edit Mode) -->
+                        <input type="date" name="end_date" 
+                            value="{{ isset($editDiscount) && $editDiscount->end_date ? \Carbon\Carbon::parse($editDiscount->end_date)->format('Y-m-d') : '' }}" 
+                            class="mt-2 w-full px-6 py-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition">
+                     </div>
+                        <div class="mt-10 text-right">
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xl py-4 px-12 rounded-2xl transition shadow-2xl">
+                            {{ isset($editDiscount) ? 'Update Diskon' : 'Simpan Diskon' }}
+                        </button>
                     </div>
-
-                    <div>
-                        <label class="text-gray-700 font-medium">Tanggal Berakhir (Opsional)</label>
-                        <input type="date" name="end_date" value="{{ isset($editDiscount) && $editDiscount->end_date ? $editDiscount->end_date->format('Y-m-d') : '' }}" 
-                               class="mt-2 w-full px-6 py-4 border border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-200 focus:border-indigo-500 transition">
-                    </div>
-                </div>
-            <div class="mt-10 text-right">
-                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xl py-4 px-12 rounded-2xl transition shadow-2xl">
-                        {{ isset($editDiscount) ? 'Update Diskon' : 'Simpan Diskon' }}
-                    </button>
-                </div>
-            </form>
+                </form>
         </div>
 
         <!-- List Diskon -->
@@ -81,9 +81,9 @@
                                     <span class="text-3xl font-bold text-red-600">-{{ $discount->percentage }}%</span>
                                 </td>
                                 <td class="py-6 px-8 text-center text-gray-600">
-                                    {{ optional(\Carbon\Carbon::parse($discount->start_date ?? null))->translatedFormat('d F Y') ?: '-' }}
+                                    {{ optional(\Carbon\Carbon::parse($discount->start_date))->translatedFormat('d F Y') ?? '-' }}
                                     s/d
-                                    {{ optional(\Carbon\Carbon::parse($discount->end_date ?? null))->translatedFormat('d F Y') ?: 'Selamanya' }}
+                                    {{ optional(\Carbon\Carbon::parse($discount->end_date))->translatedFormat('d F Y') ?? 'Selamanya' }}
                                 </td>
                                 <td class="py-6 px-8 text-center">
                                     @if($discount->isActive())
@@ -96,8 +96,10 @@
                                     <a href="{{ route('admin.discounts', ['edit' => $discount->id]) }}" class="text-indigo-600 hover:text-indigo-800 font-medium mr-6">
                                         Edit
                                     </a>
-                                    <form action="{{ route('admin.discounts', $discount) }}" method="POST" class="inline">
-                                        @csrf @method('DELETE')
+                                   <form action="{{ route('admin.discounts') }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <input type="hidden" name="discount_id" value="{{ $discount->id }}">
                                         <button type="submit" onclick="return confirm('Hapus diskon ini?')" class="text-red-600 hover:text-red-800 font-medium">
                                             Hapus
                                         </button>
